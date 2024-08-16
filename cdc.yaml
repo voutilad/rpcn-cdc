@@ -17,5 +17,7 @@ output:
 
 logger:
   level: INFO
+  format: json
+
 metrics:
   prometheus: {}
