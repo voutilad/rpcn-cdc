@@ -1,0 +1,42 @@
+
+
+services:
+  postgres:
+    image: docker.io/postgres:12
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "wal_level=logical"]
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_INITDB_ARGS=
+
+  rpcn:
+    image: docker.io/hashicorp/http-echo
+    ports:
+      - "8000:8000"
+
+  debezium:
+    image: docker.io/debezium/server:2.7.1.Final
+    ports:
+      - "8080:8080"
+    links:
+      - "postgres:postgres"
+      - "rpcn:rpcn"
+    environment:
+      - DEBEZIUM_SINK_TYPE=http
+      - DEBEZIUM_SINK_HTTP_URL=http://rpcn:8000
+      - DEBEZIUM_SOURCE_CONNECTOR_CLASS=io.debezium.connector.postgresql.PostgresConnector
+      - DEBEZIUM_SOURCE_OFFSET_STORAGE_FILE_FILENAME=data/offsets.dat
+      - DEBEZIUM_SOURCE_OFFSET_FLUSH_INTERVAL_MS=0
+      - DEBEZIUM_SOURCE_DATABASE_HOSTNAME=postgres
+      - DEBEZIUM_SOURCE_DATABASE_PORT=5432
+      - DEBEZIUM_SOURCE_DATABASE_USER=postgres
+      - DEBEZIUM_SOURCE_DATABASE_PASSWORD=password
+      - DEBEZIUM_SOURCE_DATABASE_DBNAME=postgres
+      - DEBEZIUM_SOURCE_PLUGIN_NAME=pgoutput
+      - DEBEZIUM_SOURCE_TABLE_INCLUDE_LIST=distributors,films
+      - DEBEZIUM_SOURCE_TOPIC_PREFIX=movies
+      - DEBEZIUM_FORMAT_VALUE=json
+      - DEBEZIUM_FORMAT_KEY=json
+      - DEBEZIUM_FORMAT_HEADER=json
+    
