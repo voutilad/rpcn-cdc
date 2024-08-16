@@ -8,10 +8,12 @@ services:
     command: ["postgres", "-c", "wal_level=logical"]
     environment:
       - POSTGRES_PASSWORD=password
-      - POSTGRES_INITDB_ARGS=
+    volumes:
+      - ${PWD}/movies.sql:/docker-entrypoint-initdb.d/movies.sql
 
   rpcn:
     image: docker.io/hashicorp/http-echo
+    command: ["-listen", ":8000"]
     ports:
       - "8000:8000"
 
@@ -34,7 +36,6 @@ services:
       - DEBEZIUM_SOURCE_DATABASE_PASSWORD=password
       - DEBEZIUM_SOURCE_DATABASE_DBNAME=postgres
       - DEBEZIUM_SOURCE_PLUGIN_NAME=pgoutput
-      - DEBEZIUM_SOURCE_TABLE_INCLUDE_LIST=distributors,films
       - DEBEZIUM_SOURCE_TOPIC_PREFIX=movies
       - DEBEZIUM_FORMAT_VALUE=json
       - DEBEZIUM_FORMAT_KEY=json
