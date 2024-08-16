@@ -12,10 +12,12 @@ services:
       - ${PWD}/movies.sql:/docker-entrypoint-initdb.d/movies.sql
 
   rpcn:
-    image: docker.io/hashicorp/http-echo
-    command: ["-listen", ":8000"]
+    image: docker.redpanda.com/redpandadata/connect:4
+    command: ["run", "cdc.yaml"]
     ports:
-      - "8000:8000"
+      - "4195:4195"
+    volumes:
+      - ${PWD}/cdc.yaml:/cdc.yaml
 
   debezium:
     image: docker.io/debezium/server:2.7.1.Final
@@ -26,7 +28,7 @@ services:
       - "rpcn:rpcn"
     environment:
       - DEBEZIUM_SINK_TYPE=http
-      - DEBEZIUM_SINK_HTTP_URL=http://rpcn:8000
+      - DEBEZIUM_SINK_HTTP_URL=http://rpcn:4195/cdc
       - DEBEZIUM_SOURCE_CONNECTOR_CLASS=io.debezium.connector.postgresql.PostgresConnector
       - DEBEZIUM_SOURCE_OFFSET_STORAGE_FILE_FILENAME=data/offsets.dat
       - DEBEZIUM_SOURCE_OFFSET_FLUSH_INTERVAL_MS=0
